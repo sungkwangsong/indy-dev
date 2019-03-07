@@ -9,11 +9,15 @@ from typing import Optional
 from indy.error import ErrorCode, IndyError
 
 from src.utils import get_pool_genesis_txn_path, run_coroutine, PROTOCOL_VERSION
-
+import subprocess
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 async def run():
+    bashCommand = "bash refresh.sh"
+    process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
+    output, error = process.communicate()
+
     logger.info("Getting started -> started")
 
     pool_name = 'pool1'
@@ -313,6 +317,7 @@ async def run():
     })
 
     logger.info("\"Acme\" -> Get key for Alice did")
+    #     alice_acme_verkey = await did.key_for_did(pool_handle, acme_wallet, acme_alice_connection_response['did'])
     alice_acme_verkey = await did.key_for_did(pool_handle, acme_wallet, acme_alice_connection_response['did'])
 
     logger.info("\"Acme\" -> Authcrypt \"Job-Application\" Proof Request for Alice")
