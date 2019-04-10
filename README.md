@@ -64,7 +64,7 @@ Alternatively, if you've not been able to get docker setup on windows, **Use the
 mkdir c:\INDY
 c:
 cd c:\INDY
-git clone https://github.com/kdenhartog/indy-dev.git
+git clone https://github.com/sovrin-foundation/indy-dev.git
 
 cd indy-dev
 docker build -f indy-pool.dockerfile -t indy_pool .
