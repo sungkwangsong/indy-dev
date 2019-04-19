@@ -403,7 +403,7 @@ async def run():
         "birth_date": {"raw": "Bachelor of Science, Marketing", "encoded": "12434523576212321"},
         "facial_scan": {"raw": "graduated", "encoded": "2213454313412354"}
     })
-    
+
     government['id_card_cred'], _, _ = \
         await anoncreds.issuer_create_credential(government['wallet'], government['id_card_cred_offer'],
                                                  government['id_card_cred_request'],
@@ -789,7 +789,7 @@ async def run():
     door_access['did_for_michael'], door_access['key_for_michael'], michael['did_for_door_access'], michael['key_for_door_access'], \
     door_access['michael_connection_response'] = await onboarding(door_access, michael)
 
-    async def apply_login_basic():
+    async def door_login_basic():
         # This method will be called twice: once with a valid Job-Certificate and
         # the second time after the Job-Certificate has been revoked.
         
@@ -798,7 +798,7 @@ async def run():
         print("------------------------------")
 
         print("\"door_access\" -> Create \"Door Login\" Proof Request")
-        door_access['apply_login_proof_request'] = json.dumps({
+        door_access['door_login_proof_request'] = json.dumps({
             'nonce': '123432421212',
             'name': 'login-Application-Basic',
             'version': '0.1',
@@ -828,37 +828,37 @@ async def run():
             await did.key_for_did(door_access['pool'], door_access['wallet'], door_access['michael_connection_response']['did'])
 
         print("\"door_access\" -> Authcrypt \"Door Login\" Proof Request for michael")
-        door_access['authcrypted_apply_login_proof_request'] = \
+        door_access['authcrypted_door_login_proof_request'] = \
             await crypto.auth_crypt(door_access['wallet'], door_access['key_for_michael'], door_access['michael_key_for_door_access'],
-                                    door_access['apply_login_proof_request'].encode('utf-8'))
+                                    door_access['door_login_proof_request'].encode('utf-8'))
 
         print("\"door_access\" -> Send authcrypted \"Door Login\" Proof Request to michael")
-        michael['authcrypted_apply_login_proof_request'] = door_access['authcrypted_apply_login_proof_request']
+        michael['authcrypted_door_login_proof_request'] = door_access['authcrypted_door_login_proof_request']
 
         print("\"michael\" -> Authdecrypt \"Door Login\" Proof Request from door_access")
-        michael['door_access_key_for_michael'], michael['apply_login_proof_request'], _ = \
-            await auth_decrypt(michael['wallet'], michael['key_for_door_access'], michael['authcrypted_apply_login_proof_request'])
+        michael['door_access_key_for_michael'], michael['door_login_proof_request'], _ = \
+            await auth_decrypt(michael['wallet'], michael['key_for_door_access'], michael['authcrypted_door_login_proof_request'])
 
         print("\"michael\" -> Get credentials for \"Door Login\" Proof Request")
 
-        search_for_apply_login_proof_request = \
+        search_for_door_login_proof_request = \
             await anoncreds.prover_search_credentials_for_proof_req(michael['wallet'],
-                                                                    michael['apply_login_proof_request'], None)
+                                                                    michael['door_login_proof_request'], None)
 
-        cred_for_attr1 = await get_credential_for_referent(search_for_apply_login_proof_request, 'attr1_referent')
-        cred_for_attr2 = await get_credential_for_referent(search_for_apply_login_proof_request, 'attr2_referent')
-        cred_for_predicate1 = await get_credential_for_referent(search_for_apply_login_proof_request, 'predicate1_referent')
+        cred_for_attr1 = await get_credential_for_referent(search_for_door_login_proof_request, 'attr1_referent')
+        cred_for_attr2 = await get_credential_for_referent(search_for_door_login_proof_request, 'attr2_referent')
+        cred_for_predicate1 = await get_credential_for_referent(search_for_door_login_proof_request, 'predicate1_referent')
         
-        await anoncreds.prover_close_credentials_search_for_proof_req(search_for_apply_login_proof_request)
+        await anoncreds.prover_close_credentials_search_for_proof_req(search_for_door_login_proof_request)
 
-        michael['creds_for_apply_login_proof'] = {cred_for_attr1['referent']: cred_for_attr1,
+        michael['creds_for_door_login_proof'] = {cred_for_attr1['referent']: cred_for_attr1,
                                                   cred_for_attr2['referent']: cred_for_attr2,
                                                   cred_for_predicate1['referent']: cred_for_predicate1}
 
-        requested_timestamp = int(json.loads(door_access['apply_login_proof_request'])['non_revoked']['to'])
+        requested_timestamp = int(json.loads(door_access['door_login_proof_request'])['non_revoked']['to'])
         michael['schemas_for_login_app'], michael['cred_defs_for_login_app'], michael['revoc_states_for_login_app'] = \
             await prover_get_entities_from_ledger(michael['pool'], michael['did_for_door_access'],
-                                                  michael['creds_for_apply_login_proof'],
+                                                  michael['creds_for_door_login_proof'],
                                                   michael['name'], None, requested_timestamp)
 
         print("\"michael\" -> Create \"Door Login\" Proof")
@@ -866,7 +866,7 @@ async def run():
         timestamp_for_attr1 = get_timestamp_for_attribute(cred_for_attr1, revoc_states_for_login_app)
         timestamp_for_attr2 = get_timestamp_for_attribute(cred_for_attr2, revoc_states_for_login_app)
         timestamp_for_predicate1 = get_timestamp_for_attribute(cred_for_predicate1, revoc_states_for_login_app)
-        michael['apply_login_requested_creds'] = json.dumps({
+        michael['door_login_requested_creds'] = json.dumps({
             'self_attested_attributes': {},
             'requested_attributes': {
                 'attr1_referent': {'cred_id': cred_for_attr1['referent'], 'revealed': True, 'timestamp': timestamp_for_attr1},
@@ -876,23 +876,23 @@ async def run():
                 'predicate1_referent': {'cred_id': cred_for_predicate1['referent'], 'timestamp': timestamp_for_predicate1}
             }
         })
-        michael['apply_login_proof'] = \
-            await anoncreds.prover_create_proof(michael['wallet'], michael['apply_login_proof_request'],
-                                                michael['apply_login_requested_creds'], michael['master_secret_id'],
+        michael['door_login_proof'] = \
+            await anoncreds.prover_create_proof(michael['wallet'], michael['door_login_proof_request'],
+                                                michael['door_login_requested_creds'], michael['master_secret_id'],
                                                 michael['schemas_for_login_app'], michael['cred_defs_for_login_app'],
                                                 michael['revoc_states_for_login_app'])
 
         print("\"michael\" -> Authcrypt \"Door Login\" Proof for door_access")
-        michael['authcrypted_michael_apply_login_proof'] = \
+        michael['authcrypted_michael_door_login_proof'] = \
             await crypto.auth_crypt(michael['wallet'], michael['key_for_door_access'], michael['door_access_key_for_michael'],
-                                    michael['apply_login_proof'].encode('utf-8'))
+                                    michael['door_login_proof'].encode('utf-8'))
 
         print("\"michael\" -> Send authcrypted \"Door Login\" Proof to door_access")
-        door_access['authcrypted_michael_apply_login_proof'] = michael['authcrypted_michael_apply_login_proof']
+        door_access['authcrypted_michael_door_login_proof'] = michael['authcrypted_michael_door_login_proof']
 
         print("\"door_access\" -> Authdecrypted \"Door Login\" Proof from michael")
-        _, door_access['michael_apply_login_proof'], authdecrypted_michael_apply_login_proof = \
-            await auth_decrypt(door_access['wallet'], door_access['key_for_michael'], door_access['authcrypted_michael_apply_login_proof'])
+        _, door_access['michael_door_login_proof'], authdecrypted_michael_door_login_proof = \
+            await auth_decrypt(door_access['wallet'], door_access['key_for_michael'], door_access['authcrypted_michael_door_login_proof'])
 
         print("\"door_access\" -> Get Schemas, Credential Definitions and Revocation Registries from Ledger"
                     " required for Proof verifying")
@@ -900,17 +900,17 @@ async def run():
         door_access['schemas_for_login_app'], door_access['cred_defs_for_login_app'], door_access['revoc_defs_for_login_app'], \
         door_access['revoc_regs_for_login_app'] = \
             await verifier_get_entities_from_ledger(door_access['pool'], door_access['did'],
-                                                    authdecrypted_michael_apply_login_proof['identifiers'],
+                                                    authdecrypted_michael_door_login_proof['identifiers'],
                                                     door_access['name'], requested_timestamp)
 
         print("\"door_access\" -> Verify \"Door Login\" Proof from michael")
         assert 'Permanent' == \
-               authdecrypted_michael_apply_login_proof['requested_proof']['revealed_attrs']['attr1_referent']['raw']
+               authdecrypted_michael_door_login_proof['requested_proof']['revealed_attrs']['attr1_referent']['raw']
 
-    await apply_login_basic()
+    await door_login_basic()
 
-    assert await anoncreds.verifier_verify_proof(door_access['apply_login_proof_request'],
-                                                 door_access['michael_apply_login_proof'],
+    assert await anoncreds.verifier_verify_proof(door_access['door_login_proof_request'],
+                                                 door_access['michael_door_login_proof'],
                                                  door_access['schemas_for_login_app'],
                                                  door_access['cred_defs_for_login_app'],
                                                  door_access['revoc_defs_for_login_app'],
@@ -935,13 +935,13 @@ async def run():
     print("\n==============================")
 
     print("\n==============================")
-    print("== Apply for the login with door_access again - Job-Certificate proving after revocation  ==")
+    print("== door for the login with door_access again - Job-Certificate proving after revocation  ==")
     input("=== Press any key to continue... ===\n------------------------------")
 
-    await apply_login_basic()
+    await door_login_basic()
 
-    assert not await anoncreds.verifier_verify_proof(door_access['apply_login_proof_request'],
-                                                     door_access['michael_apply_login_proof'],
+    assert not await anoncreds.verifier_verify_proof(door_access['door_login_proof_request'],
+                                                     door_access['michael_door_login_proof'],
                                                      door_access['schemas_for_login_app'],
                                                      door_access['cred_defs_for_login_app'],
                                                      door_access['revoc_defs_for_login_app'],
