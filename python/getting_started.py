@@ -73,7 +73,7 @@ async def run():
     government_did = await get_verinym(pool_handle, "Sovrin Steward", steward_wallet, steward_did,
                                        steward_government_key, "Government", government_wallet, government_steward_did,
                                        government_steward_key, 'TRUST_ANCHOR')
-
+    
     logger.info("==============================")
     logger.info("== Getting Trust Anchor credentials - Faber Onboarding  ==")
     logger.info("------------------------------")
@@ -87,7 +87,7 @@ async def run():
     logger.info("==============================")
     logger.info("== Getting Trust Anchor credentials - Faber getting Verinym  ==")
     logger.info("------------------------------")
-
+    
     faber_did = await get_verinym(pool_handle, "Sovrin Steward", steward_wallet, steward_did, steward_faber_key,
                                   "Faber", faber_wallet, faber_steward_did, faber_steward_key, 'TRUST_ANCHOR')
 
