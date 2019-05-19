@@ -10,6 +10,7 @@
 encrypted.dat
 input.txt
 
+.local
 # virtual environments
 venv
 env
