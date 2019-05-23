@@ -10,10 +10,14 @@
 encrypted.dat
 input.txt
 
-.local
+
 # virtual environments
 venv
 env
 
 #pycache files
 python/src/__pycache__/
+
+
+.local
+sandbox/
